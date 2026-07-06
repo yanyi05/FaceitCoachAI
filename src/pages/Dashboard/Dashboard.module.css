@@ -1,0 +1,71 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+
+  gap: 24px;
+}
+
+.subtitle {
+  color: #b3b3b3;
+
+  margin-top: -10px;
+}
+
+.button {
+  width: 220px;
+
+  height: 48px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background-color: #4f8cff;
+
+  color: white;
+
+  font-size: 16px;
+
+  cursor: pointer;
+
+  transition: background-color 0.2s;
+}
+
+.button:hover {
+  background-color: #3d73d9;
+}
+
+.section {
+  margin-top: 20px;
+}
+
+.card {
+  margin-top: 12px;
+
+  padding: 20px;
+
+  border-radius: 8px;
+
+  background-color: #252526;
+
+  border: 1px solid #3c3c3c;
+}
+.card {
+  margin-top: 24px;
+
+  padding: 20px;
+
+  background-color: #252526;
+
+  border: 1px solid #3c3c3c;
+
+  border-radius: 8px;
+}
+
+.card h2 {
+  margin-top: 0;
+}
+
+.card p {
+  word-break: break-all;
+}
