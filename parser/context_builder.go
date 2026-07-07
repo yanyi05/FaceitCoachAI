@@ -4,7 +4,7 @@ func BuildContext(result *Result) *AnalyzerContext {
 
 	ctx := &AnalyzerContext{
 
-		PlayerBySteam: make(map[uint64]*Player),
+		PlayerIDBySteam: make(map[uint64]uint8),
 
 		PlayerByID: make(map[uint8]*Player),
 
@@ -21,6 +21,7 @@ func BuildContext(result *Result) *AnalyzerContext {
 		player := &result.Players[i]
 
 		ctx.PlayerBySteam[player.SteamID64] = player
+		ctx.PlayerIDBySteam[player.SteamID64] = player.PlayerID
 	}
 
 	// 建立 PlayerState 索引

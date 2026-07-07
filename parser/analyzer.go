@@ -1,6 +1,9 @@
 package main
 
-func Analyze(result *Result) {
+func Analyze(
+	ctx *AnalyzerContext,
+	result *Result,
+) {
 
 	// ==========================
 	// Build Timeline Data
@@ -27,6 +30,9 @@ func Analyze(result *Result) {
 	// ==========================
 
 	AnalyzeTrade(result)
+
+	AnalyzePosition(ctx, result)
+
 	//AnalyzePlayerState(result)
 	AnalyzeRotation(result)
 }

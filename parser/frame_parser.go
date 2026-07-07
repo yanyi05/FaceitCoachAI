@@ -24,10 +24,6 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 
 	lastPosition := make(map[uint64]PlayerState)
 
-	playerIndex := make(map[uint64]uint8)
-
-	nextPlayerID := uint8(0)
-
 	lastTick := -1
 
 	parser.RegisterEventHandler(func(e events.FrameDone) {
@@ -58,19 +54,9 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 
 			pos := p.Position()
 
-			id, ok := playerIndex[p.SteamID64]
-
-			if !ok {
-
-				id = nextPlayerID
-
-				playerIndex[p.SteamID64] = id
-
-				nextPlayerID++
-			}
+			id := GetPlayerID(p.SteamID64)
 
 			current := PlayerState{
-
 				Tick: tick,
 
 				PlayerID: id,
@@ -85,6 +71,7 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 
 				Armor: uint8(p.Armor()),
 			}
+
 			last, ok := lastPosition[p.SteamID64]
 
 			if ok {
@@ -138,8 +125,6 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 	fmt.Println("Finished.")
 
 	count := len(positions)
-
-	fmt.Println("Positions Collected:", count)
 
 	fmt.Println("Positions Collected:", count)
 

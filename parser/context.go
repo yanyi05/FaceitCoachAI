@@ -5,6 +5,8 @@ type AnalyzerContext struct {
 
 	PlayerByID map[uint8]*Player
 
+	PlayerIDBySteam map[uint64]uint8
+
 	PlayerStateByPlayer map[uint8][]PlayerState
 
 	KillsByRound map[int][]Kill

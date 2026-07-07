@@ -359,6 +359,7 @@ func EventParser(path string) error {
 		players = append(players, Player{
 			Name:      p.Name,
 			SteamID64: p.SteamID64,
+			PlayerID:  GetPlayerID(p.SteamID64),
 			Team:      teamName(p.Team),
 			IsBot:     p.IsBot,
 		})
@@ -417,7 +418,9 @@ func EventParser(path string) error {
 
 	result.PlayerStates = positions
 
-	Analyze(&result)
+	ctx := BuildContext(&result)
+
+	Analyze(ctx, &result)
 
 	for _, s := range result.Stats {
 
@@ -429,6 +432,8 @@ func EventParser(path string) error {
 			s.TradeDeaths,
 		)
 	}
+
+	ValidateResult(&result)
 
 	output(result)
 
