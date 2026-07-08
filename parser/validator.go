@@ -16,7 +16,15 @@ func ValidateResult(result *Result) {
 
 	fmt.Fprintln(os.Stderr, "Damage  :", len(result.Damages))
 
-	fmt.Fprintln(os.Stderr, "States  :", len(result.PlayerStates))
+	stateCount := 0
+
+	if result.PositionCache != nil {
+		for _, frame := range result.PositionCache.Frames {
+			stateCount += len(frame.Players)
+		}
+	}
+
+	fmt.Fprintln(os.Stderr, "States  :", stateCount)
 
 	fmt.Fprintln(os.Stderr, "Rounds  :", len(result.Rounds))
 }

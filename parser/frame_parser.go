@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 
 	dem "github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs"
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/events"
 )
 
-func CollectPlayerStates(path string) ([]PlayerState, error) {
+func BuildPositionCache(path string) (*PositionCache, error) {
 
 	f, err := os.Open(path)
 	if err != nil {
@@ -20,7 +21,9 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 	parser := dem.NewParser(f)
 	defer parser.Close()
 
-	var positions []PlayerState
+	cache := PositionCache{
+		Frames: make(map[int]*TickFrame),
+	}
 
 	lastPosition := make(map[uint64]PlayerState)
 
@@ -38,7 +41,7 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 
 		lastTick = tick
 
-		if tick%4 != 0 {
+		if tick%PositionCacheInterval != 0 {
 			return
 		}
 
@@ -57,43 +60,92 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 			id := GetPlayerID(p.SteamID64)
 
 			current := PlayerState{
-				Tick: tick,
+				LastPlace: p.LastPlaceName(),
+				Tick:      tick,
+				Round:     state.TotalRoundsPlayed() + 1,
 
-				PlayerID: id,
+				PlayerID:  id,
+				SteamID64: p.SteamID64,
+				Team:      teamName(p.Team),
 
 				X: int16(pos.X),
-
 				Y: int16(pos.Y),
-
 				Z: int16(pos.Z),
 
-				HP: uint8(p.Health()),
-
-				Armor: uint8(p.Armor()),
+				ViewYaw:   float32(p.ViewDirectionX()),
+				ViewPitch: float32(p.ViewDirectionY()),
 
 				Alive: p.IsAlive(),
+
+				IsWalking:  p.IsWalking(),
+				IsStanding: p.IsStanding(),
+				IsDucking:  p.IsDucking(),
+				IsAirborne: p.IsAirborne(),
+
+				IsScoped:      p.IsScoped(),
+				IsBlinded:     p.IsBlinded(),
+				FlashDuration: float32(p.FlashDurationTimeRemaining().Seconds()),
+
+				HasHelmet:    p.HasHelmet(),
+				HasDefuseKit: p.HasDefuseKit(),
+
+				IsPlanting: p.IsPlanting,
+				IsDefusing: p.IsDefusing,
+
+				HP:    uint8(p.Health()),
+				Armor: uint8(p.Armor()),
+				Money: p.Money(),
+			}
+
+			weapon := p.ActiveWeapon()
+
+			if weapon != nil {
+				current.Weapon = weapon.String()
+				current.AmmoInMagazine = weapon.AmmoInMagazine()
+				current.AmmoReserve = weapon.AmmoReserve()
+				current.ZoomLevel = int(weapon.ZoomLevel())
 			}
 
 			last, ok := lastPosition[p.SteamID64]
 
 			if ok {
 
-				dx := current.X - last.X
-				dy := current.Y - last.Y
+				dx := int(current.X) - int(last.X)
+				dy := int(current.Y) - int(last.Y)
+				dz := int(current.Z) - int(last.Z)
 
-				moved := dx*dx+dy*dy > 16*16
+				movementDistance := float32(math.Sqrt(
+					float64(dx*dx + dy*dy + dz*dz),
+				))
+
+				sampleTime := float32(PositionCacheInterval) / float32(parser.TickRate())
+
+				current.Velocity = movementDistance / sampleTime
+
+				current.VelocityX = float32(dx) / sampleTime
+				current.VelocityY = float32(dy) / sampleTime
+				current.VelocityZ = float32(dz) / sampleTime
+
+				moved := current.Velocity > 16
 
 				hpChanged := current.HP != last.HP
-
 				armorChanged := current.Armor != last.Armor
 
 				if !moved && !hpChanged && !armorChanged {
-
 					continue
 				}
 			}
 
-			positions = append(positions, current)
+			frame, ok := cache.Frames[current.Tick]
+
+			if !ok {
+				frame = &TickFrame{
+					Tick: current.Tick,
+				}
+				cache.Frames[current.Tick] = frame
+			}
+
+			frame.Players = append(frame.Players, current)
 
 			lastPosition[p.SteamID64] = current
 		}
@@ -126,11 +178,17 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 
 	fmt.Fprintln(os.Stderr, "Finished.")
 
-	count := len(positions)
+	playerCount := 0
 
-	fmt.Fprintln(os.Stderr, "Positions Collected:", count)
+	for _, frame := range cache.Frames {
+		playerCount += len(frame.Players)
+	}
 
-	data, err := json.MarshalIndent(positions, "", "  ")
+	fmt.Fprintln(os.Stderr, "Frames:", len(cache.Frames))
+	fmt.Fprintln(os.Stderr, "Player States:", playerCount)
+
+	data, err := json.MarshalIndent(cache, "", "  ")
+
 	if err != nil {
 		return nil, err
 	}
@@ -142,6 +200,6 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 
 	fmt.Fprintln(os.Stderr, "Saved to player_states.json")
 
-	return positions, nil
+	return &cache, nil
 
 }

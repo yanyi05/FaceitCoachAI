@@ -33,6 +33,10 @@ parser/.gocache/
 # Build
 parser/parser.exe
 
-# Generated parser output
-parser/output.json
+# Generated parser outputs
+parser/result.json
 parser/player_states.json
+parser/output/
+
+# Demo files
+*.dem

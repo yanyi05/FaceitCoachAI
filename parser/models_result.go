@@ -36,9 +36,9 @@ type Result struct {
 
 	Message string `json:"message,omitempty"`
 
-	WeaponFires  []WeaponFire  `json:"weaponFires"`
-	PlayerStates []PlayerState `json:"playerStates"`
-	Shots        []Shot        `json:"shots"`
+	WeaponFires   []WeaponFire   `json:"weaponFires"`
+	PositionCache *PositionCache `json:"PositionCache"`
+	Shots         []Shot         `json:"shots"`
 
 	AI AIAnalysis `json:"analysis"`
 

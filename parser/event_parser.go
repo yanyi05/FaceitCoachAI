@@ -28,18 +28,14 @@ func EventParser(path string, debug DebugMode) error {
 	parser := dem.NewParser(f)
 	defer parser.Close()
 
-	var players []Player
-	var kills []Kill
 	stats := make(map[uint64]*PlayerStats)
-	var rounds []Round
+
 	roundNumber := 0
 	var match Match
 	var mapName string
 	var teams []TeamGroup
-	var damages []Damage
 	var weaponFires []WeaponFire
-	var shots []Shot
-	var positions []PlayerState
+	var positionCache *PositionCache
 	var deathSnapshots []DeathSnapshot
 	var matchStarted bool
 
@@ -78,7 +74,7 @@ func EventParser(path string, debug DebugMode) error {
 			"Damage:",
 			e.HealthDamage,
 		)
-		damages = append(damages, Damage{
+		match.Damages = append(match.Damages, Damage{
 
 			Tick:  parser.GameState().IngameTick(),
 			Round: parser.GameState().TotalRoundsPlayed() + 1,
@@ -105,31 +101,31 @@ func EventParser(path string, debug DebugMode) error {
 			HitGroup: hitGroupName(e.HitGroup),
 		})
 
-		for i := len(shots) - 1; i >= 0; i-- {
+		for i := len(match.Shots) - 1; i >= 0; i-- {
 
-			if shots[i].SteamID64 != e.Attacker.SteamID64 {
+			if match.Shots[i].SteamID64 != e.Attacker.SteamID64 {
 				continue
 			}
 
-			if shots[i].Hit {
+			if match.Shots[i].Hit {
 				continue
 			}
 
-			shots[i].Hit = true
+			match.Shots[i].Hit = true
 
-			shots[i].HitTick = parser.GameState().IngameTick()
+			match.Shots[i].HitTick = parser.GameState().IngameTick()
 
-			shots[i].TimeToDamage =
-				shots[i].HitTick -
-					shots[i].FireTick
+			match.Shots[i].TimeToDamage =
+				match.Shots[i].HitTick -
+					match.Shots[i].FireTick
 
-			shots[i].Victim = e.Player.Name
+			match.Shots[i].Victim = e.Player.Name
 
-			shots[i].VictimSteamID64 = e.Player.SteamID64
+			match.Shots[i].VictimSteamID64 = e.Player.SteamID64
 
-			shots[i].Damage = e.HealthDamageTaken
+			match.Shots[i].Damage = e.HealthDamageTaken
 
-			shots[i].HitGroup = hitGroupName(e.HitGroup)
+			match.Shots[i].HitGroup = hitGroupName(e.HitGroup)
 
 			break
 		}
@@ -165,9 +161,9 @@ func EventParser(path string, debug DebugMode) error {
 
 			Weapon: weapon,
 		})
-		shots = append(shots, Shot{
+		match.Shots = append(match.Shots, Shot{
 
-			ShotIndex: len(shots) + 1,
+			ShotIndex: len(match.Shots) + 1,
 
 			FireTick: parser.GameState().IngameTick(),
 
@@ -237,7 +233,7 @@ func EventParser(path string, debug DebugMode) error {
 			"Victim:", e.Victim.Name,
 		)
 
-		kills = append(kills, Kill{
+		match.Kills = append(match.Kills, Kill{
 			Tick:  parser.GameState().IngameTick(),
 			Round: parser.GameState().TotalRoundsPlayed() + 1,
 
@@ -446,76 +442,76 @@ func EventParser(path string, debug DebugMode) error {
 
 		deathSnapshots = append(deathSnapshots, snapshot)
 
-		for i := len(shots) - 1; i >= 0; i-- {
+		for i := len(match.Shots) - 1; i >= 0; i-- {
 
-			if shots[i].SteamID64 != e.Killer.SteamID64 {
+			if match.Shots[i].SteamID64 != e.Killer.SteamID64 {
 				continue
 			}
 
-			if shots[i].Kill {
+			if match.Shots[i].Kill {
 				continue
 			}
 
-			if !shots[i].Hit {
+			if !match.Shots[i].Hit {
 				continue
 			}
 
-			if shots[i].VictimSteamID64 != e.Victim.SteamID64 {
+			if match.Shots[i].VictimSteamID64 != e.Victim.SteamID64 {
 				continue
 			}
 
-			shots[i].Kill = true
+			match.Shots[i].Kill = true
 
-			shots[i].Headshot = e.IsHeadshot
+			match.Shots[i].Headshot = e.IsHeadshot
 
-			shots[i].Wallbang = e.IsWallBang()
+			match.Shots[i].Wallbang = e.IsWallBang()
 
-			shots[i].ThroughSmoke = e.ThroughSmoke
+			match.Shots[i].ThroughSmoke = e.ThroughSmoke
 
-			shots[i].Blind = e.AttackerBlind
+			match.Shots[i].Blind = e.AttackerBlind
 
-			shots[i].NoScope = e.NoScope
+			match.Shots[i].NoScope = e.NoScope
 
-			shots[i].FlashAssist = e.AssistedFlash
+			match.Shots[i].FlashAssist = e.AssistedFlash
 
-			shots[i].Distance = e.Distance
+			match.Shots[i].Distance = e.Distance
 
-			shots[i].Penetration = e.PenetratedObjects
+			match.Shots[i].Penetration = e.PenetratedObjects
 
-			shots[i].TimeToKill =
+			match.Shots[i].TimeToKill =
 				parser.GameState().IngameTick() -
-					shots[i].FireTick
+					match.Shots[i].FireTick
 
 			break
 		}
 
-		for i := len(shots) - 1; i >= 0; i-- {
+		for i := len(match.Shots) - 1; i >= 0; i-- {
 
-			if shots[i].SteamID64 != e.Killer.SteamID64 {
+			if match.Shots[i].SteamID64 != e.Killer.SteamID64 {
 				continue
 			}
 
-			if shots[i].VictimSteamID64 != e.Victim.SteamID64 {
+			if match.Shots[i].VictimSteamID64 != e.Victim.SteamID64 {
 				continue
 			}
 
-			shots[i].Kill = true
+			match.Shots[i].Kill = true
 
-			shots[i].Headshot = e.IsHeadshot
+			match.Shots[i].Headshot = e.IsHeadshot
 
-			shots[i].Wallbang = e.IsWallBang()
+			match.Shots[i].Wallbang = e.IsWallBang()
 
-			shots[i].ThroughSmoke = e.ThroughSmoke
+			match.Shots[i].ThroughSmoke = e.ThroughSmoke
 
-			shots[i].Blind = e.AttackerBlind
+			match.Shots[i].Blind = e.AttackerBlind
 
-			shots[i].NoScope = e.NoScope
+			match.Shots[i].NoScope = e.NoScope
 
-			shots[i].FlashAssist = e.AssistedFlash
+			match.Shots[i].FlashAssist = e.AssistedFlash
 
-			shots[i].Distance = e.Distance
+			match.Shots[i].Distance = e.Distance
 
-			shots[i].Penetration = e.PenetratedObjects
+			match.Shots[i].Penetration = e.PenetratedObjects
 
 			break
 		}
@@ -550,7 +546,7 @@ func EventParser(path string, debug DebugMode) error {
 
 		state := parser.GameState()
 
-		rounds = append(rounds, Round{
+		match.Rounds = append(match.Rounds, Round{
 			Number:  roundNumber,
 			Winner:  teamName(e.Winner),
 			ScoreCT: state.TeamCounterTerrorists().Score(),
@@ -568,47 +564,20 @@ func EventParser(path string, debug DebugMode) error {
 		return err
 	}
 
-	state := parser.GameState()
+	match = BuildMatch(
+		parser,
+		mapName,
+	)
 
-	match = Match{
-		Map:      mapName,
-		TickRate: int(parser.TickRate()),
+	teams = BuildStableTeamsFromPlayers(match.Players)
 
-		ScoreCT: state.TeamCounterTerrorists().Score(),
-		ScoreT:  state.TeamTerrorists().Score(),
-	}
-	if match.ScoreCT > match.ScoreT {
-		match.Winner = "CT"
-	} else {
-		match.Winner = "T"
-	}
+	ApplyTeamGroupsToPlayers(match.Players, teams)
 
-	state = parser.GameState()
+	for i := range match.Shots {
 
-	for _, p := range state.Participants().All() {
+		if !match.Shots[i].Hit {
 
-		if p.SteamID64 == 0 {
-			continue
-		}
-
-		players = append(players, Player{
-			Name:      p.Name,
-			SteamID64: p.SteamID64,
-			PlayerID:  GetPlayerID(p.SteamID64),
-			Team:      teamName(p.Team),
-			IsBot:     p.IsBot,
-		})
-	}
-
-	teams = BuildStableTeamsFromPlayers(players)
-
-	ApplyTeamGroupsToPlayers(players, teams)
-
-	for i := range shots {
-
-		if !shots[i].Hit {
-
-			shots[i].Miss = true
+			match.Shots[i].Miss = true
 		}
 	}
 	if err != nil {
@@ -619,7 +588,7 @@ func EventParser(path string, debug DebugMode) error {
 		return err
 	}
 
-	fmt.Fprintln(os.Stderr, "Kill Count:", len(kills))
+	fmt.Fprintln(os.Stderr, "Kill Count:", len(match.Kills))
 
 	var statsList []PlayerStats
 
@@ -646,34 +615,34 @@ func EventParser(path string, debug DebugMode) error {
 
 		Match: match,
 
-		Players: players,
+		Players: match.Players,
 
 		Teams: teams,
 
-		Kills: kills,
+		Kills: match.Kills,
 
 		DeathSnapshots: deathSnapshots,
 
-		Damages: damages,
+		Damages: match.Damages,
 
 		WeaponFires: weaponFires,
 
-		Shots: shots,
+		Shots: match.Shots,
 
-		PlayerStates: positions,
+		PositionCache: nil,
 
-		Rounds: rounds,
+		Rounds: match.Rounds,
 
 		Stats: statsList,
 	}
 
-	positions, err = CollectPlayerStates(path)
+	positionCache, err = BuildPositionCache(path)
 
 	if err != nil {
 		return err
 	}
 
-	result.PlayerStates = positions
+	result.PositionCache = positionCache
 
 	ctx := BuildContext(&result)
 

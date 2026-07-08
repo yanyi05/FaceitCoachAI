@@ -68,7 +68,7 @@ func main() {
 
 	case "frame":
 
-		_, err := CollectPlayerStates(demo)
+		_, err := BuildPositionCache(demo)
 
 		if err != nil {
 			panic(err)

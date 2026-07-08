@@ -28,10 +28,16 @@ func BuildContext(result *Result) *AnalyzerContext {
 	}
 
 	// 建立 PlayerState 索引
-	for _, state := range result.PlayerStates {
+	if result.PositionCache != nil {
 
-		ctx.PlayerStateByPlayer[state.PlayerID] =
-			append(ctx.PlayerStateByPlayer[state.PlayerID], state)
+		for _, frame := range result.PositionCache.Frames {
+
+			for _, state := range frame.Players {
+
+				ctx.PlayerStateByPlayer[state.PlayerID] =
+					append(ctx.PlayerStateByPlayer[state.PlayerID], state)
+			}
+		}
 	}
 
 	return ctx

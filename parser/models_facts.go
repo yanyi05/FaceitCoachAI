@@ -57,7 +57,7 @@ func BuildFacts(result *Result) Facts {
 			Trades:      result.AI.Trades,
 		},
 		Positioning: PositioningFacts{
-			PlayerStates: result.PlayerStates,
+			PlayerStates: nil,
 			Support:      result.AI.Support,
 			Rotations:    result.AI.Rotations,
 		},
