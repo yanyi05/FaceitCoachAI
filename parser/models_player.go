@@ -30,9 +30,12 @@ type PlayerStats struct {
 	ShotsFired int `json:"shotsFired"`
 	ShotsHit   int `json:"shotsHit"`
 
-	EntryKills  int     `json:"entryKills"`
-	EntryDeaths int     `json:"entryDeaths"`
-	AverageTTD  float64 `json:"averageTTD"`
+	EntryKills    int     `json:"entryKills"`
+	EntryDeaths   int     `json:"entryDeaths"`
+	EntryAttempts int     `json:"entryAttempts"`
+	EntrySuccess  float64 `json:"entrySuccess"`
+
+	AverageTTD float64 `json:"averageTTD"`
 
 	TotalTTDTicks int `json:"totalTTDTicks"`
 
@@ -42,4 +45,7 @@ type PlayerStats struct {
 	TradeDeaths int `json:"tradeDeaths"`
 
 	TradeSuccess float64 `json:"tradeSuccess"`
+
+	OpeningKills  int `json:"openingKills"`
+	OpeningDeaths int `json:"openingDeaths"`
 }

@@ -21,8 +21,8 @@ func Analyze(
 	calcAccuracy(result, stats)
 	calcADR(result, stats)
 	calcHeadshot(result, stats)
-	calcEntry(result, stats)
 	calcTTD(result, stats)
+	calcKAST(result, stats)
 	// calcTrade(result, stats)
 
 	// ==========================
@@ -33,6 +33,8 @@ func Analyze(
 	result.AI.Support = support
 
 	AnalyzeTrade(result, support)
+
+	AnalyzeEntry(result)
 
 	AnalyzeRotation(ctx, result)
 

@@ -6,9 +6,21 @@ import (
 
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/common"
 	"github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs/events"
+
+	"faceitcoachai/parser/database"
 )
 
 func main() {
+
+	if err := database.Init(); err != nil {
+		panic(err)
+	}
+
+	if err := database.Migrate(); err != nil {
+		panic(err)
+	}
+
+	defer database.Close()
 
 	if len(os.Args) < 2 {
 
@@ -32,7 +44,23 @@ func main() {
 
 	case "event":
 
-		err := EventParser(demo)
+		err := EventParser(demo, DebugNone)
+
+		if err != nil {
+			panic(err)
+		}
+
+	case "debug-trade":
+
+		err := EventParser(demo, DebugTrade)
+
+		if err != nil {
+			panic(err)
+		}
+
+	case "debug-api":
+
+		err := EventParser(demo, DebugAPI)
 
 		if err != nil {
 			panic(err)
@@ -53,11 +81,24 @@ func main() {
 }
 
 func output(v any) {
+	data, err := json.MarshalIndent(v, "", "    ")
+	if err != nil {
+		panic(err)
+	}
 
-	data, _ := json.MarshalIndent(v, "", "    ")
-
+	// 1. 输出到终端（React 会用）
 	os.Stdout.Write(data)
+
+	// 2. 自动建立 output 目录
+	os.MkdirAll("output", 0755)
+
+	// 3. 写入 JSON 文件
+	err = os.WriteFile("output/event.json", data, 0644)
+	if err != nil {
+		panic(err)
+	}
 }
+
 func teamName(team common.Team) string {
 	switch team {
 	case common.TeamCounterTerrorists:
