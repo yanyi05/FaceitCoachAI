@@ -70,6 +70,8 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 				HP: uint8(p.Health()),
 
 				Armor: uint8(p.Armor()),
+
+				Alive: p.IsAlive(),
 			}
 
 			last, ok := lastPosition[p.SteamID64]
@@ -116,17 +118,17 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 
 		if tick != lastPrintTick && tick%1000 == 0 {
 
-			fmt.Println("Tick:", tick)
+			fmt.Fprintln(os.Stderr, "Tick:", tick)
 
 			lastPrintTick = tick
 		}
 	}
 
-	fmt.Println("Finished.")
+	fmt.Fprintln(os.Stderr, "Finished.")
 
 	count := len(positions)
 
-	fmt.Println("Positions Collected:", count)
+	fmt.Fprintln(os.Stderr, "Positions Collected:", count)
 
 	data, err := json.MarshalIndent(positions, "", "  ")
 	if err != nil {
@@ -138,7 +140,7 @@ func CollectPlayerStates(path string) ([]PlayerState, error) {
 		return nil, err
 	}
 
-	fmt.Println("Saved to player_states.json")
+	fmt.Fprintln(os.Stderr, "Saved to player_states.json")
 
 	return positions, nil
 

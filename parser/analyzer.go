@@ -29,12 +29,14 @@ func Analyze(
 	// AI Analysis
 	// ==========================
 
-	AnalyzeTrade(result)
+	support := AnalyzeSupport(ctx, result)
+	result.AI.Support = support
 
-	AnalyzePosition(ctx, result)
+	AnalyzeTrade(result, support)
+
+	AnalyzeRotation(ctx, result)
 
 	//AnalyzePlayerState(result)
-	AnalyzeRotation(result)
 }
 
 func buildStatsIndex(result *Result) map[uint64]*PlayerStats {

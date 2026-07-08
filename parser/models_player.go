@@ -4,6 +4,7 @@ type Player struct {
 	Name      string `json:"name"`
 	SteamID64 uint64 `json:"steamId"`
 	Team      string `json:"team"`
+	TeamGroup string `json:"teamGroup"`
 	PlayerID  uint8  `json:"playerId"`
 	IsBot     bool   `json:"isBot"`
 }

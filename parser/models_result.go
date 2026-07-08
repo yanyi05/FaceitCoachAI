@@ -5,6 +5,7 @@ type Result struct {
 	Match   Match `json:"match"`
 
 	Players []Player      `json:"players"`
+	Teams   []TeamGroup   `json:"teams"`
 	Kills   []Kill        `json:"kills"`
 	Damages []Damage      `json:"damages"` // ← 新增这里
 	Rounds  []Round       `json:"rounds"`
@@ -17,4 +18,6 @@ type Result struct {
 	Shots        []Shot        `json:"shots"`
 
 	AI AIAnalysis `json:"analysis"`
+
+	Facts Facts `json:"facts"`
 }

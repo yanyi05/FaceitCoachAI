@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	dem "github.com/markus-wa/demoinfocs-golang/v5/pkg/demoinfocs"
@@ -21,10 +22,21 @@ func EventParser(path string) error {
 	var rounds []Round
 	roundNumber := 0
 	var match Match
+	var teams []TeamGroup
 	var damages []Damage
 	var weaponFires []WeaponFire
 	var shots []Shot
 	var positions []PlayerState
+
+	parser.RegisterEventHandler(func(events.RoundFreezetimeEnd) {
+		if len(teams) > 0 {
+			return
+		}
+
+		teams = BuildStableTeamsFromParticipants(
+			parser.GameState().Participants().Playing(),
+		)
+	})
 
 	parser.RegisterEventHandler(func(e events.PlayerHurt) {
 
@@ -188,6 +200,17 @@ func EventParser(path string) error {
 			assisterName = e.Assister.Name
 			assisterSteamID = e.Assister.SteamID64
 		}
+
+		fmt.Fprintln(
+			os.Stderr,
+			"Kill Debug",
+			"Tick:", parser.GameState().IngameTick(),
+			"RoundNumber:", roundNumber,
+			"TotalRoundsPlayed:", parser.GameState().TotalRoundsPlayed(),
+			"Weapon:", e.Weapon.String(),
+			"Killer:", e.Killer.Name,
+			"Victim:", e.Victim.Name,
+		)
 
 		kills = append(kills, Kill{
 			Tick:  parser.GameState().IngameTick(),
@@ -365,6 +388,12 @@ func EventParser(path string) error {
 		})
 	}
 
+	if len(teams) == 0 {
+		teams = BuildStableTeamsFromPlayers(players)
+	}
+
+	ApplyTeamGroupsToPlayers(players, teams)
+
 	for i := range shots {
 
 		if !shots[i].Hit {
@@ -380,7 +409,7 @@ func EventParser(path string) error {
 		return err
 	}
 
-	println("Kill Count:", len(kills))
+	fmt.Fprintln(os.Stderr, "Kill Count:", len(kills))
 
 	var statsList []PlayerStats
 
@@ -394,6 +423,8 @@ func EventParser(path string) error {
 		Match: match,
 
 		Players: players,
+
+		Teams: teams,
 
 		Kills: kills,
 
@@ -420,7 +451,11 @@ func EventParser(path string) error {
 
 	ctx := BuildContext(&result)
 
+	ValidateResult(&result)
+
 	Analyze(ctx, &result)
+
+	GenerateInsights(&result)
 
 	for _, s := range result.Stats {
 
@@ -434,6 +469,8 @@ func EventParser(path string) error {
 	}
 
 	ValidateResult(&result)
+
+	result.Facts = BuildFacts(&result)
 
 	output(result)
 

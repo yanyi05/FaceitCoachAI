@@ -7,18 +7,32 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-electron
+# Node
+node_modules/
+dist/
+dist-electron/
+
+# Go
+.gocache/
+parser/.gocache/
+
+# Local
 *.local
 
-# Editor directories and files
+# IDE
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Build
+parser/parser.exe
+
+# Generated parser output
+parser/output.json
+parser/player_states.json

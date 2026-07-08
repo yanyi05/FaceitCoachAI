@@ -10,17 +10,23 @@ import (
 
 func main() {
 
-	if len(os.Args) < 3 {
+	if len(os.Args) < 2 {
 
 		println("Usage:")
+		println("parser.exe demo.dem")
 		println("parser.exe event demo.dem")
 		println("parser.exe frame demo.dem")
 
 		return
 	}
 
-	mode := os.Args[1]
-	demo := os.Args[2]
+	mode := "event"
+	demo := os.Args[1]
+
+	if len(os.Args) >= 3 {
+		mode = os.Args[1]
+		demo = os.Args[2]
+	}
 
 	switch mode {
 

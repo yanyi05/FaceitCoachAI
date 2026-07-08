@@ -2,15 +2,6 @@ package main
 
 import "math"
 
-func Distance(a, b PlayerState) float64 {
-
-	dx := float64(a.X - b.X)
-	dy := float64(a.Y - b.Y)
-	dz := float64(a.Z - b.Z)
-
-	return math.Sqrt(dx*dx + dy*dy + dz*dz)
-}
-
 func DistanceSquared(
 	a PlayerState,
 	b PlayerState,
@@ -20,4 +11,26 @@ func DistanceSquared(
 	dy := int(a.Y) - int(b.Y)
 
 	return dx*dx + dy*dy
+}
+
+func Distance(
+	a PlayerState,
+	b PlayerState,
+) int {
+
+	return int(math.Sqrt(float64(DistanceSquared(a, b))))
+}
+
+func HeightDifference(
+	a PlayerState,
+	b PlayerState,
+) int {
+
+	dz := int(a.Z) - int(b.Z)
+
+	if dz < 0 {
+		dz = -dz
+	}
+
+	return dz
 }
